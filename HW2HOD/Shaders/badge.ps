@@ -1,0 +1,70 @@
+﻿ps_2_0
+
+; this file was translated from "shaders\fp_arb\badge.fp"
+
+; USAGE:
+; lighting must be enabled
+; specular lighting should be enabled
+; $diffuse texture must be in stage 0
+; $glow texture must be in stage 1
+; badge texture must be in stage 2
+; $mask texture must be in stage 3
+; team colour must be stored in c0 and
+; stripe colour must be stored in c1
+
+def c7, 0.0, 0.25, 0.5, 1.0
+
+dcl_2d s0
+dcl_2d s1
+dcl_2d s2
+dcl_2d s3
+
+dcl t0.xy
+dcl t1.xy
+
+dcl v0.rgba
+dcl v1.rgba
+
+; sample the texture
+texld r0, t0, s0
+texld r1, t0, s1
+texld r2, t0, s2
+texld r3, t1, s3
+
+; adjust colour underlying base
+; make darker
+add r6, r0, c7.b
+; make lighter
+sub r8, r0, c7.b
+mad r7, r6, c0, r8
+mad r4, r6, c1, r8
+
+; compute amount of team colour needed
+; average the team colour and base texture
+lrp r5.rgb, r2.r, r0, r7 
+ mov r5.a, c7.a
+lrp r5.rgb, r2.g, r5, r4  
+ mov r5.a, c7.a
+ 
+; apply the badge
+;mul_sat r4, r3, r2.a
+;mov r4, r3
+;lrp r3.rgb, r4.a, r4, r5
+; mov r3.a, c7.a
+
+; lighting
+; compute amount of glow
+; average glow/level lighting
+lrp r2, r1.g, r1.g, v0
+
+; compute specular
+; add specular
+mad r2, v1, r1.b, r2
+
+; final colour
+;mul oC0.rgb, r3, r2
+; mov oC0.a, c7.a
+
+add r3, r5, r3
+mul r3, r2, r3
+mov oC0, r3
